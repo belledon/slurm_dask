@@ -1,0 +1,36 @@
+bootstrap: docker
+from: python:3.6-jessie
+
+%setup
+ if [ -d ${SINGULARITY_ROOTFS}/sbin ];then
+    rm -r ${SINGULARITY_ROOTFS}/sbin
+ fi
+ mkdir ${SINGULARITY_ROOTFS}/sbin
+
+ if [ -d /src ];then
+     rm -r /src
+ fi
+ mkdir /src
+
+%files
+ sbin/* /sbin/
+ dask-jobqueue /src/
+
+%environment
+ export PATH=$PATH:/sbin/
+ export LANG=en_US.UTF-8
+
+%runscript
+  exec bash "$@"
+
+%post
+ # apt-get update && apt-get install -y locales
+ # locale-gen en_US.UTF-8
+ # apt-get clean
+
+ python3 -m pip install "dask[complete]"
+ # python3 -m pip install "dask_jobqueue"
+ chmod +x /sbin/*
+ cd /src
+ python3 -m pip install -e .
+ # cd / && rm -r /src
